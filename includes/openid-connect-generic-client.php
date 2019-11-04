@@ -8,6 +8,7 @@ class OpenID_Connect_Generic_Client {
 	private $endpoint_login;
 	private $endpoint_userinfo;
 	private $endpoint_token;
+	private $required_role;
 
 	// login flow "ajax" endpoint
 	private $redirect_uri;
@@ -27,13 +28,14 @@ class OpenID_Connect_Generic_Client {
 	 * @param $redirect_uri
 	 * @param $state_time_limit time states are valid in seconds
 	 */
-	function __construct( $client_id, $client_secret, $scope, $endpoint_login, $endpoint_userinfo, $endpoint_token, $redirect_uri, $state_time_limit){
+	function __construct( $client_id, $client_secret, $scope, $endpoint_login, $endpoint_userinfo, $endpoint_token, $required_role, $redirect_uri, $state_time_limit){
 		$this->client_id = $client_id;
 		$this->client_secret = $client_secret;
 		$this->scope = $scope;
 		$this->endpoint_login = $endpoint_login;
 		$this->endpoint_userinfo = $endpoint_userinfo;
 		$this->endpoint_token = $endpoint_token;
+		$this->required_role = $required_role;
 		$this->redirect_uri = $redirect_uri;
 		$this->state_time_limit = $state_time_limit;
 	}
@@ -346,7 +348,11 @@ class OpenID_Connect_Generic_Client {
 		if ( ! is_array( $id_token_claim ) ) {
 			return new WP_Error( 'bad-id-token-claim', __( 'Bad ID token claim' ), $id_token_claim );
 		}
-		
+
+		if ( $this->required_role != "" && !in_array($this->required_role, $id_token_claim['resource_access'][$this->client_id]['roles']) ) {
+			return new WP_Error( 'not-authorized', __( 'Not authorized' ), $id_token_claim );
+		}
+
 		// make sure we can find our identification data and that it has a value
 		if ( ! isset( $id_token_claim['sub'] ) || empty( $id_token_claim['sub'] ) ) {
 			return new WP_Error( 'no-subject-identity', __( 'No subject identity' ), $id_token_claim );

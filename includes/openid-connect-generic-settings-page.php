@@ -89,6 +89,13 @@ class OpenID_Connect_Generic_Settings_Page {
 				'type'        => 'text',
 				'section'     => 'client_settings',
 			),
+			'required_role'   => array(
+				'title'       => __( 'Required client role' ),
+				'description' => __( 'IdentifyRole to require for authenticating users.' ),
+				'example'     => 'admin',
+				'type'        => 'text',
+				'section'     => 'client_settings',
+			),
 			'endpoint_end_session'    => array(
 				'title'       => __( 'End Session Endpoint URL' ),
 				'description' => __( 'Identify provider logout endpoint.' ),
