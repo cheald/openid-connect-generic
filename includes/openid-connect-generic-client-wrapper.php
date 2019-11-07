@@ -267,6 +267,18 @@ class OpenID_Connect_Generic_Client_Wrapper {
 		return $request;
 	}
 
+	function get_best_role($user_roles) {
+		$test_roles = array("administrator", "editor", "author", "contributor", "subscriber");
+		foreach($test_roles as $role) {
+			foreach($user_roles as $userrole) {
+				if($role == $user_role) {
+					return $role;
+				}
+			}
+		}
+		return "subscriber;"
+	}
+
 	/**
 	 * Control the authentication and subsequent authorization of the user when
 	 *  returning from the IDP.
@@ -330,6 +342,18 @@ class OpenID_Connect_Generic_Client_Wrapper {
 			$this->error_redirect( $valid );
 		}
 
+		// Get roles
+		$valid_roles = preg_split("/[, ]+/", $this->required_role);
+		$user_roles = array();
+		if(count($valid_roles) > 0) {
+			$user_roles = array_intersect($valid_roles, $id_token_claim['resource_access'][$this->client_id]['roles']));
+			if(count($same_roles) == 0) {
+				$err = new WP_Error( 'not-authorized', __( 'Not authorized' ), $id_token_claim );
+				$this->error_redirect($err);
+			}
+		}
+		$user_role = $this->get_best_role($user_roles);
+
 		// if userinfo endpoint is set, exchange the token_response for a user_claim
 		if ( !empty( $this->settings->endpoint_userinfo ) && isset( $token_response['access_token'] )) {
 			$user_claim = $client->get_user_claim( $token_response );
@@ -364,10 +388,9 @@ class OpenID_Connect_Generic_Client_Wrapper {
 				return;
 			}
 		}
-		else {
-			// allow plugins / themes to take action using current claims on existing user (e.g. update role)
-			do_action( 'openid-connect-generic-update-user-using-current-claim', $user, $user_claim );
-		}
+
+		$user->set_role($user_role);
+		do_action( 'openid-connect-generic-update-user-using-current-claim', $user, $user_claim );
 
 		// validate the found / created user
 		$valid = $this->validate_user( $user );

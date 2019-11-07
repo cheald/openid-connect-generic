@@ -342,20 +342,11 @@ class OpenID_Connect_Generic_Client {
 	 *
 	 * @param $id_token_claim
 	 *
-	 * @return array|\WP_Error
+	 * @return boolean|\WP_Error
 	 */
 	function validate_id_token_claim( $id_token_claim ){
 		if ( ! is_array( $id_token_claim ) ) {
 			return new WP_Error( 'bad-id-token-claim', __( 'Bad ID token claim' ), $id_token_claim );
-		}
-
-		$roles = preg_split("/[, ]+/", $this->required_role);
-		$same_roles = array();
-		if(count($roles) > 0) {
-			$same_roles = array_intersect($roles, $id_token_claim['resource_access'][$this->client_id]['roles']));
-			if(count($same_roles) == 0) {
-				return new WP_Error( 'not-authorized', __( 'Not authorized' ), $id_token_claim );
-			}
 		}
 
 		// make sure we can find our identification data and that it has a value
@@ -363,7 +354,7 @@ class OpenID_Connect_Generic_Client {
 			return new WP_Error( 'no-subject-identity', __( 'No subject identity' ), $id_token_claim );
 		}
 
-		return $same_roles;
+		return true;
 	}
 
 	/**
