@@ -91,8 +91,8 @@ class OpenID_Connect_Generic_Settings_Page {
 			),
 			'required_role'   => array(
 				'title'       => __( 'Required client role' ),
-				'description' => __( 'IdentifyRole to require for authenticating users.' ),
-				'example'     => 'admin',
+				'description' => __( 'Roles to permit for authenticating users. New users will be mapped to a Wordpress role of the same name, if they have it.' ),
+				'example'     => 'administrator,editor',
 				'type'        => 'text',
 				'section'     => 'client_settings',
 			),
