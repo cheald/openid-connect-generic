@@ -8,7 +8,6 @@ class OpenID_Connect_Generic_Client {
 	private $endpoint_login;
 	private $endpoint_userinfo;
 	private $endpoint_token;
-	private $required_role;
 
 	// login flow "ajax" endpoint
 	private $redirect_uri;
@@ -28,14 +27,13 @@ class OpenID_Connect_Generic_Client {
 	 * @param $redirect_uri
 	 * @param $state_time_limit time states are valid in seconds
 	 */
-	function __construct( $client_id, $client_secret, $scope, $endpoint_login, $endpoint_userinfo, $endpoint_token, $required_role, $redirect_uri, $state_time_limit){
+	function __construct( $client_id, $client_secret, $scope, $endpoint_login, $endpoint_userinfo, $endpoint_token, $redirect_uri, $state_time_limit){
 		$this->client_id = $client_id;
 		$this->client_secret = $client_secret;
 		$this->scope = $scope;
 		$this->endpoint_login = $endpoint_login;
 		$this->endpoint_userinfo = $endpoint_userinfo;
 		$this->endpoint_token = $endpoint_token;
-		$this->required_role = $required_role;
 		$this->redirect_uri = $redirect_uri;
 		$this->state_time_limit = $state_time_limit;
 	}
