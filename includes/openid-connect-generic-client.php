@@ -243,7 +243,7 @@ class OpenID_Connect_Generic_Client {
 			"client_id" => $this->client_id
 		);
 
-		$enc_state = base64_encode(openssl_encrypt(json_encode($new_state), "AES-192-CBC", SECURE_AUTH_KEY, 0, AUTH_SALT));
+		$enc_state = base64_encode(openssl_encrypt(json_encode($new_state), "AES-192-CBC", SECURE_AUTH_KEY, 0, substr(AUTH_SALT, 0, 16)));
 		setcookie("_oid_state", $enc_state, 0, COOKIEPATH, COOKIE_DOMAIN, is_ssl());
 
 		return $new_state["state"];
@@ -273,7 +273,8 @@ class OpenID_Connect_Generic_Client {
 		}
 
 		$enc_state = base64_decode($_COOKIE["_oid_state"]);
-		$json = openssl_decrypt($enc_state, "AES-192-CBC", SECURE_AUTH_KEY, 0, AUTH_SALT);
+
+		$json = openssl_decrypt($enc_state, "AES-192-CBC", SECURE_AUTH_KEY, 0, substr(AUTH_SALT, 0, 16));
 		if(!$json) {
 			return Array();
 		}

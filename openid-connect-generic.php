@@ -238,7 +238,8 @@ class OpenID_Connect_Generic {
 				'enable_logging'  => 0,
 				'log_limit'       => 1000,
 				'show_login_button' => true,
-				'shortcode' => 'openid_connect_generic_login_button'
+				'shortcode' => 'openid_connect_generic_login_button',
+				'login_url' => wp_login_url(),
 			)
 		);
 

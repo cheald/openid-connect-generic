@@ -171,7 +171,7 @@ class OpenID_Connect_Generic_Client_Wrapper {
 
 		// redirect user back to login page
 		wp_redirect(
-			wp_login_url() .
+			$this->settings->login_url .
 			'?login-error=' . $error->get_error_code() .
 		    '&message=' . urlencode( $error->get_error_message() )
 		);

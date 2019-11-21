@@ -178,6 +178,12 @@ class OpenID_Connect_Generic_Settings_Page {
 				'type'        => 'checkbox',
 				'section'     => 'user_settings',
 			),
+			'login_url'       => array(
+				'title'       => __( 'Login URL' ),
+				'description' => __( 'Base login URL for this authorization flow.' ),
+				'type'        => 'string',
+				'section'     => 'user_settings',
+			),
 			'enable_logging'    => array(
 				'title'       => __( 'Enable Logging' ),
 				'description' => __( 'Very simple log messages for debugging purposes.' ),
