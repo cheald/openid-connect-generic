@@ -212,6 +212,11 @@ class OpenID_Connect_Generic_Client_Wrapper {
 	 * @return string
 	 */
 	function get_end_session_logout_redirect_url( $redirect_url, $requested_redirect_to, $user ) {
+		// Only handle logout redirects if the user logged in with this client
+		if( $this->settings->client_id !== $user->get('openid-connect-generic-last-client')) {
+			return $redirect_url;
+		}
+
 		$url = $this->settings->endpoint_end_session;
 		$query = parse_url( $url, PHP_URL_QUERY );
 		$url .= $query ? '&' : '?';
@@ -441,6 +446,7 @@ class OpenID_Connect_Generic_Client_Wrapper {
 	function login_user( $user, $token_response, $id_token_claim, $user_claim, $subject_identity ){
 		// hey, we made it!
 		// let's remember the tokens for future reference
+		update_user_meta( $user->ID, 'openid-connect-generic-last-client', $this->settings->client_id );
 		update_user_meta( $user->ID, 'openid-connect-generic-last-token-response', $token_response );
 		update_user_meta( $user->ID, 'openid-connect-generic-last-id-token-claim', $id_token_claim );
 		update_user_meta( $user->ID, 'openid-connect-generic-last-user-claim', $user_claim );
