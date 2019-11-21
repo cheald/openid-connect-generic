@@ -346,12 +346,14 @@ class OpenID_Connect_Generic_Client_Wrapper {
 		// Get roles
 		global $wp_roles;
 		$valid_roles = array_keys($wp_roles->roles);
+		// if($this->settings->allowed_roles) {
+		// 	$valid_roles = array_intersect($valid_roles, $this->settings->allowed_roles);
+		// }
 		$user_roles = array_intersect($valid_roles, $id_token_claim['resource_access'][$this->settings->client_id]['roles']);
 		if(count($user_roles) == 0) {
 			$err = new WP_Error( 'not-authorized', __( 'Not authorized' ), $id_token_claim );
 			$this->error_redirect($err);
 		}
-		$user_role = $user_roles[0];
 
 		// if userinfo endpoint is set, exchange the token_response for a user_claim
 		if ( !empty( $this->settings->endpoint_userinfo ) && isset( $token_response['access_token'] )) {
@@ -388,7 +390,18 @@ class OpenID_Connect_Generic_Client_Wrapper {
 			}
 		}
 
-		$user->set_role($user_role);
+		$saved_user_roles = $user->get('openid-connect-generic-roles');
+		if(!$saved_user_roles) {
+			$saved_user_roles = Array();
+		}
+		$saved_user_roles[$this->settings->client_id] = $user_roles;
+		update_user_meta( $user->ID, 'openid-connect-generic-roles', $saved_user_roles );
+		$user->set_role("");
+		$composite_roles = array_unique(array_merge(...array_values($saved_user_roles)));
+		foreach($composite_roles as $role) {
+			$user->add_role($role);
+		}
+
 		do_action( 'openid-connect-generic-update-user-using-current-claim', $user, $user_claim );
 
 		// validate the found / created user
@@ -408,9 +421,9 @@ class OpenID_Connect_Generic_Client_Wrapper {
 
 		// redirect back to the origin page if enabled
 		$redirect_url = isset( $_COOKIE[ $this->cookie_redirect_key ] ) ? esc_url_raw( $_COOKIE[ $this->cookie_redirect_key ] ) : false;
+		// $redirect_url = preg_replace("oid-login=" . $this->settings->client_id, "", $redirect_url);
 
 		if( $this->settings->redirect_user_back && !empty( $redirect_url ) ) {
-			$redirect_url = preg_replace("oid-login=" . $this->settings->client_id, "");
 			do_action( 'openid-connect-generic-redirect-user-back', $redirect_url, $user );
 			setcookie( $this->cookie_redirect_key, $redirect_url, 1, COOKIEPATH, COOKIE_DOMAIN, is_ssl() );
 			wp_redirect( $redirect_url );
@@ -547,7 +560,7 @@ class OpenID_Connect_Generic_Client_Wrapper {
 		}
 
 		// normalize the data a bit
-		$desired_username = strtolower( preg_replace( '/[^a-zA-Z\_0-9]/', '', iconv( 'UTF-8', 'ASCII//TRANSLIT',  $desired_username ) ) );
+		$desired_username = strtolower( preg_replace( '/[^a-zA-Z\_0-9.@]/', '_', iconv( 'UTF-8', 'ASCII//TRANSLIT',  $desired_username ) ) );
 
 		// copy the username for incrementing
 		$username = $desired_username;
