@@ -410,6 +410,7 @@ class OpenID_Connect_Generic_Client_Wrapper {
 		$redirect_url = isset( $_COOKIE[ $this->cookie_redirect_key ] ) ? esc_url_raw( $_COOKIE[ $this->cookie_redirect_key ] ) : false;
 
 		if( $this->settings->redirect_user_back && !empty( $redirect_url ) ) {
+			$redirect_url = preg_replace("oid-login=" . $this->settings->client_id, "");
 			do_action( 'openid-connect-generic-redirect-user-back', $redirect_url, $user );
 			setcookie( $this->cookie_redirect_key, $redirect_url, 1, COOKIEPATH, COOKIE_DOMAIN, is_ssl() );
 			wp_redirect( $redirect_url );
