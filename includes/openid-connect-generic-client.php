@@ -54,7 +54,7 @@ class OpenID_Connect_Generic_Client {
 			urlencode( $this->scope ),
 			urlencode( $this->client_id ),
 			$this->new_state(),
-			urlencode( $this->redirect_uri )
+			urlencode( $this->redirect_uri)
 		);
 
 		return apply_filters( 'openid-connect-generic-auth-url', $url );
@@ -232,22 +232,21 @@ class OpenID_Connect_Generic_Client {
 	}
 
 	/**
-	 * Generate a new state, save it to the states option with a timestamp,
-	 *  and return it.
+	 * Generate a new state, save it to a cookie, and return it.
 	 *
 	 * @return string
 	 */
 	function new_state() {
-		$states = get_option( 'openid-connect-generic-valid-states', array() );
-
 		// new state w/ timestamp
-		$new_state            = md5( mt_rand() . microtime( true ) );
-		$states[ $new_state ] = time();
+		$new_state = Array(
+			"state" => md5( mt_rand() . microtime( true ) ),
+			"client_id" => $this->client_id
+		);
 
-		// save state
-		update_option( 'openid-connect-generic-valid-states', $states );
+		$enc_state = base64_encode(openssl_encrypt(json_encode($new_state), "AES-192-CBC", SECURE_AUTH_KEY, 0, AUTH_SALT));
+		setcookie("_oid_state", $enc_state, 0, COOKIEPATH, COOKIE_DOMAIN, is_ssl());
 
-		return $new_state;
+		return $new_state["state"];
 	}
 
 	/**
@@ -258,27 +257,28 @@ class OpenID_Connect_Generic_Client {
 	 * @return bool
 	 */
 	function check_state( $state ) {
-		$states = get_option( 'openid-connect-generic-valid-states', array() );
-		$valid  = false;
+		if(!$_COOKIE["_oid_state"]) {
+			return false;
+		}
+		$user_state = $this->get_saved_state();
 
-		// remove any expired states
-		foreach ( $states as $code => $timestamp ) {
-			if ( ( $timestamp + $this->state_time_limit ) < time() ) {
-				unset( $states[ $code ] );
-			}
+		// Constant time comparison
+		return hash_equals($user_state["state"], $state);
+	}
+
+	// Get the state stored in the auth cookie
+	function get_saved_state() {
+		if(!$_COOKIE["_oid_state"]) {
+			return Array();
 		}
 
-		// see if the current state is still within the list of valid states
-		if ( isset( $states[ $state ] ) ) {
-			// state is valid, remove it
-			unset( $states[ $state ] );
-			$valid = true;
+		$enc_state = base64_decode($_COOKIE["_oid_state"]);
+		$json = openssl_decrypt($enc_state, "AES-192-CBC", SECURE_AUTH_KEY, 0, AUTH_SALT);
+		if(!$json) {
+			return Array();
 		}
 
-		// save our altered states
-		update_option( 'openid-connect-generic-valid-states', $states );
-
-		return $valid;
+		return json_decode($json, true);
 	}
 
 	/**

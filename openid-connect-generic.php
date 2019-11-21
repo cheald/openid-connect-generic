@@ -208,6 +208,8 @@ class OpenID_Connect_Generic {
 			'openid_connect_generic_settings',
 			// default settings values
 			array(
+				'options_page_title' => __( 'OpenID Connect Client' ),
+
 				// oauth client settings
 				'login_type'        => 'button',
 				'client_id'         => '',
@@ -235,6 +237,8 @@ class OpenID_Connect_Generic {
 				'redirect_on_logout' => 1,
 				'enable_logging'  => 0,
 				'log_limit'       => 1000,
+				'show_login_button' => true,
+				'shortcode' => 'openid_connect_generic_login_button'
 			)
 		);
 

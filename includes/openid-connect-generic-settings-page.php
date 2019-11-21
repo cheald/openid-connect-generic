@@ -13,9 +13,6 @@ class OpenID_Connect_Generic_Settings_Page {
 	// defined during construction for i18n reasons
 	private $settings_fields = array();
 
-	// options page slug
-	private $options_page_name = 'openid-connect-generic-settings';
-
 	// options page settings group name
 	private $settings_field_group;
 
@@ -23,7 +20,8 @@ class OpenID_Connect_Generic_Settings_Page {
 	 * @param OpenID_Connect_Generic_Option_Settings $settings
 	 * @param OpenID_Connect_Generic_Option_Logger $logger
 	 */
-	function __construct( OpenID_Connect_Generic_Option_Settings $settings, OpenID_Connect_Generic_Option_Logger $logger ) {
+	function __construct( OpenID_Connect_Generic_Option_Settings $settings, OpenID_Connect_Generic_Option_Logger $logger) {
+		$this->options_page_title   = $settings->option_page_title ? $settings->option_page_title : __( 'OpenID Connect Client' );
 		$this->settings             = $settings;
 		$this->logger               = $logger;
 		$this->settings_field_group = $this->settings->get_option_name() . '-group';
@@ -43,8 +41,9 @@ class OpenID_Connect_Generic_Settings_Page {
 				'description' => __( 'Select how the client (login form) should provide login options.' ),
 				'type'        => 'select',
 				'options'     => array(
-					'button' => __( 'OpenID Connect button on login form' ),
-					'auto'   => __( 'Auto Login - SSO' ),
+					'button'  => __( 'OpenID Connect button on login form' ),
+					'auto'    => __( 'Auto Login - SSO' ),
+					'hidden'  => __( 'Hidden - Will Be Called Manually' ),
 				),
 				'section'     => 'client_settings',
 			),
@@ -229,10 +228,10 @@ class OpenID_Connect_Generic_Settings_Page {
 	 */
 	public function admin_menu() {
 		add_options_page(
-			__( 'OpenID Connect - Generic Client' ),
-			__( 'OpenID Connect Client' ),
+			$this->options_page_title,
+			$this->options_page_title,
 			'manage_options',
-			$this->options_page_name,
+			$this->settings->get_option_name(),
 			array( $this, 'settings_page' ) );
 	}
 
@@ -248,25 +247,25 @@ class OpenID_Connect_Generic_Settings_Page {
 		add_settings_section( 'client_settings',
 			__( 'Client Settings' ),
 			array( $this, 'client_settings_description' ),
-			$this->options_page_name
+			$this->settings->get_option_name()
 		);
 
 		add_settings_section( 'user_settings',
 			__( 'WordPress User Settings' ),
 			array( $this, 'user_settings_description' ),
-			$this->options_page_name
+			$this->settings->get_option_name()
 		);
 
 		add_settings_section( 'authorization_settings',
 			__( 'Authorization Settings' ),
 			array( $this, 'authorization_settings_description' ),
-			$this->options_page_name
+			$this->settings->get_option_name()
 		);
 
 		add_settings_section( 'log_settings',
 			__( 'Log Settings' ),
 			array( $this, 'log_settings_description' ),
-			$this->options_page_name
+			$this->settings->get_option_name()
 		);
 
 		// preprocess fields and add them to the page
@@ -295,7 +294,7 @@ class OpenID_Connect_Generic_Settings_Page {
 			// add the field
 			add_settings_field( $key, $field['title'],
 				array( $this, $callback ),
-				$this->options_page_name,
+				$this->settings->get_option_name(),
 				$field['section'],
 				$field
 			);
@@ -341,7 +340,7 @@ class OpenID_Connect_Generic_Settings_Page {
 			<form method="post" action="options.php">
 				<?php
 				settings_fields( $this->settings_field_group );
-				do_settings_sections( $this->options_page_name );
+				do_settings_sections( $this->settings->get_option_name() );
 				submit_button();
 
 				// simple debug to view settings array

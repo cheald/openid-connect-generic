@@ -30,7 +30,7 @@ class OpenID_Connect_Generic_Login_Form {
 		add_filter( 'login_message', array( $login_form, 'handle_login_page' ), 99 );
 
 		// add a shortcode for the login button
-		add_shortcode( 'openid_connect_generic_login_button', array( $login_form, 'make_login_button' ) );
+		add_shortcode( $settings->shortcode, array( $login_form, 'make_login_button' ) );
 
 		$login_form->handle_redirect_login_type_auto();
 
@@ -43,9 +43,14 @@ class OpenID_Connect_Generic_Login_Form {
 	function handle_redirect_login_type_auto()
 	{
 		if ( $GLOBALS['pagenow'] == 'wp-login.php'
-			&& ( $this->settings->login_type == 'auto' || ! empty( $_GET['force_redirect'] ) )
+			&& (
+				$this->settings->login_type == 'auto' || ! empty( $_GET['force_redirect'] ) ||
+				($this->settings->client_id && $_GET['oid-login'] === $this->settings->client_id)
+			)
 			&& ( ! isset( $_GET[ 'action' ] ) || $_GET[ 'action' ] !== 'logout' )
-			&& ! isset( $_POST['wp-submit'] ) )
+			&& ! isset( $_POST['wp-submit'] ) &&
+			($_GET["response_type"] !== "code")
+		)
 		{
 			if (  ! isset( $_GET['login-error'] ) ) {
 			    $this->handle_redirect_cookie();
@@ -97,13 +102,14 @@ class OpenID_Connect_Generic_Login_Form {
 	 * @return string
 	 */
 	function handle_login_page( $message ) {
+		if($this->settings->show_login_button) {
+			if ( isset( $_GET['login-error'] ) ) {
+				$message .= $this->make_error_output( $_GET['login-error'], $_GET['message'] );
+			}
 
-		if ( isset( $_GET['login-error'] ) ) {
-			$message .= $this->make_error_output( $_GET['login-error'], $_GET['message'] );
+			// login button is appended to existing messages in case of error
+			$message .= $this->make_login_button();
 		}
-
-		// login button is appended to existing messages in case of error
-		$message .= $this->make_login_button();
 		return $message;
 	}
 
@@ -133,7 +139,7 @@ class OpenID_Connect_Generic_Login_Form {
 	 */
 	function make_login_button() {
 		$text = apply_filters( 'openid-connect-generic-login-button-text', __( 'Login with OpenID Connect' ) );
-		$href = $this->client_wrapper->get_authentication_url();
+		$href = wp_login_url() . "?oid-login=" . $this->settings->client_id;
 
 		ob_start();
 		?>

@@ -274,6 +274,14 @@ class OpenID_Connect_Generic_Client_Wrapper {
 	function authentication_request_callback() {
 		$client = $this->client;
 
+		// To permit multiple instances serving multiple realms, validate that the realm we want to auth for is our realm.
+		$user_state = $client->get_saved_state();
+
+		if($user_state["client_id"] != $this->settings->client_id) {
+			// If the auth flow isn't for this instance, just bail.
+			return;
+		}
+
 		// start the authentication flow
 		$authentication_request = $client->validate_authentication_request( $_GET );
 
@@ -330,9 +338,9 @@ class OpenID_Connect_Generic_Client_Wrapper {
 			$this->error_redirect( $valid );
 		}
 
-    // Get roles
-    global $wp_roles;
-    $valid_roles = array_keys($wp_roles->roles);
+		// Get roles
+		global $wp_roles;
+		$valid_roles = array_keys($wp_roles->roles);
 		$user_roles = array_intersect($valid_roles, $id_token_claim['resource_access'][$this->settings->client_id]['roles']);
 		if(count($user_roles) == 0) {
 			$err = new WP_Error( 'not-authorized', __( 'Not authorized' ), $id_token_claim );
