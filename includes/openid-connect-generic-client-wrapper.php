@@ -330,8 +330,9 @@ class OpenID_Connect_Generic_Client_Wrapper {
 			$this->error_redirect( $valid );
 		}
 
-		// Get roles
-		$valid_roles = array("administrator", "editor", "author", "contributor", "subscriber");
+    // Get roles
+    global $wp_roles;
+    $valid_roles = array_keys($wp_roles->roles);
 		$user_roles = array_intersect($valid_roles, $id_token_claim['resource_access'][$this->settings->client_id]['roles']);
 		if(count($user_roles) == 0) {
 			$err = new WP_Error( 'not-authorized', __( 'Not authorized' ), $id_token_claim );
